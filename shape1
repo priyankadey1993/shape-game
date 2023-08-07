@@ -1,0 +1,615 @@
+#include <iostream>
+#include<conio.h>
+#include<dos.h>
+#include<stdlib.h>
+#include<string.h>
+#include <windows.h>
+#include <time.h>
+#include<cmath>
+#include<vector>
+
+using namespace std;
+
+HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+COORD CursorPosition;
+
+#define SCREEN_WIDTH 90
+#define SCREEN_HEIGHT 26
+#define TOTAL_OBSTACLE 15
+
+/*
+  Class name -Draw border
+  Description- this class is used for setting the consol position and draw the boundry
+  member function-gotoxy(); used for setting the cursor position
+                setcursor(); used for setting the cursor
+                drawborder(); for draw the border
+  child class-object,obstacle class; 
+*/
+class drawborder {
+	public :
+		
+		void gotoxy(int x, int y) 
+		{
+			CursorPosition.X = x;
+			CursorPosition.Y = y;
+			SetConsoleCursorPosition(console, CursorPosition);
+		}
+
+		void setcursor(bool visible, DWORD size) 
+		{
+			if(size == 0)
+				size = 20;
+
+			CONSOLE_CURSOR_INFO lpCursor;
+			lpCursor.bVisible = visible;
+			lpCursor.dwSize = size;
+			SetConsoleCursorInfo(console,&lpCursor);
+		}
+		
+		void draw_border() 
+		{
+			for(int i=0; i<SCREEN_WIDTH; i++) 
+			{
+				gotoxy(i,0);
+				cout<<"!";
+				gotoxy(i,SCREEN_HEIGHT);
+				cout<<"!";
+			}
+
+			for(int i=0; i<SCREEN_HEIGHT; i++) 
+			{
+				gotoxy(0,i);
+				cout<<"!";
+				gotoxy(SCREEN_WIDTH,i);
+				cout<<"!";
+			}
+					 
+		    gotoxy(SCREEN_WIDTH-1,SCREEN_HEIGHT-1);
+		    cout<<"#";
+		}
+};
+
+/* 
+    Class name -my_object 
+    Description-This class is used for object initilization and movement.
+    data_member-objposX,objposY(int type),
+				obj[4][4],Robj[4][4],Uobj[4][4],Lobj[4][4],Dobj[4][4](char type)
+  	member function-rotateRight(); used for rotating the object in right direction
+                  rotateLeft(); used for rotating the object in left direction
+                  rotateUp(); used for rotating the object in up direction
+                  rotateDown();used for rotating the object in down direction
+                  drawobj();used for draw the obj into given position
+                  eraseobj();used for erase the obj into given position
+                  win(); used for check win position if object come to winnig point it return 1 otherwise return 0
+                  boundrycollide();used for check boudry collidation if object come to boundry it return 1 otherwise return 0
+    parent class- drawborder
+    child class- obstacle class,play class                  
+*/
+ 
+class my_object :virtual public drawborder  {
+	
+	protected:
+		
+		char obj[4][4] = {	' ','*','*',' ',   
+                    		'*','*','*','*',   
+                    		' ','*','*',' ',  
+                    		'*','*','*','*' };
+							 
+		char Robj[4][4] = {	'*',' ','*',' ',
+		                  	'*','*','*','*',
+						 	'*','*','*','*',
+						 	'*',' ','*',' '};
+		
+		char Lobj[4][4] = {	' ','*',' ','*',
+		                  	'*','*','*','*',
+						 	'*','*','*','*',
+						 	' ','*',' ','*'};
+		
+		char Dobj[4][4] = {	'*','*','*','*',
+		                  	' ','*','*',' ',
+						 	'*','*','*','*',
+						 	' ','*','*',' '};
+						 	
+    	char Uobj[4][4] = { ' ','*','*',' ',   
+                    		'*','*','*','*',   
+                    		' ','*','*',' ',  
+                    		'*','*','*','*' };;
+	public:
+	
+		int objposY = 4;
+		int objposX = 4;
+		
+		void rotateRight()
+		{
+			
+			for(int i=0; i<4; i++) 
+				for(int j=0; j<4; j++)
+				{
+				obj[i][j] = Robj[i][j];
+		        }
+		}
+		
+ 		void rotateLeft()
+ 		{
+ 			
+			for(int i=0; i<4; i++) 
+				for(int j=0; j<4; j++)
+				{
+				obj[i][j] = Lobj[i][j];
+		        }	
+		 }
+		 
+		void rotateDown()
+ 		{
+ 		
+			for(int i=0; i<4; i++) 
+				for(int j=0; j<4; j++)
+				{
+				obj[i][j] = Dobj[i][j];
+		        }
+		}	
+        
+        void rotateUp()
+ 		{
+ 			
+			for(int i=0; i<4; i++) 
+				for(int j=0; j<4; j++)
+				{
+				obj[i][j] = Uobj[i][j];
+		        }
+		}
+		
+		void drawobj()
+		{   
+			for(int i=0; i<4; i++) {
+				for(int j=0; j<4; j++) {
+					gotoxy(j+objposX,i+objposY);
+					cout<<obj[i][j];
+				}
+			}
+		}
+		
+		void eraseobj() {
+			for(int i=0; i<4; i++) {
+				for(int j=0; j<4; j++) {
+					gotoxy(j+objposX,i+objposY);
+					cout<<" ";
+				}
+			}
+		}
+		
+		int win()
+		{
+			for(int i=0; i<4; i++) 
+			for(int j=0; j<4; j++) 
+			if(objposX+j == SCREEN_WIDTH-1 && objposY+i == SCREEN_HEIGHT-1 )
+			{
+				return 1;
+			}
+				return 0;
+			
+		}
+		
+		int boundry_colide()
+		{
+			for(int i=0;i<4;i++)
+				if(objposX+i >= SCREEN_WIDTH-1 || objposX+i<= 0 )
+				{
+					return 1;
+				}
+			
+			for(int i=0;i<4;i++)
+		    	if(objposY+i >= SCREEN_HEIGHT-1 || objposY+i <= 0)
+				{
+					return 1;
+				}
+				
+			return 0;	
+		}
+	
+};
+
+/* 
+    Class name -obstacle 
+    Description-this class is used for obstacle initilization and movementand eraseing.
+    static data_member-count_obstacle (integertype)
+	data_member-pos(COORD type),obstacle[4][4](char type)
+  	member function-trigle(); used for generating tringular shape
+                  rectangle(); used for generating rectangle shape
+                  hollow_rectangle(); used for generating hollow_rectangle shape
+                  genrate_pose();used for genrating the position of the obstacle
+                  clearObstacle();used for =clearing the arry of obstacle
+                  drawobstacle();used for draw the obstacle in differnt shape in the genrating position 
+                  getpos(); used for return the position of obstacle
+                  eraseonstacle();used for eraseing the obstacle right now not in use but it may be use in future if we 
+				  increase the obsticle number
+    parent class- drawborder, my_object
+    child class- play class              
+*/
+
+class obstacle :virtual public drawborder,virtual protected my_object
+ {	  
+ 	protected:
+ 		
+ 		COORD pos ;
+ 		char obstacle[4][4];
+ 	    static int count_obstacle;
+ 	    
+ 	public:   
+ 		void trigle()
+ 		{
+ 			int i=0,j=0;
+        	for(i = 1; i <= 4; i++)
+  			{	 
+    			for(int j = 1; j <= i; j++)
+      				obstacle[i][j]='*';
+    	
+      			obstacle[i][j]='\n'; 
+  			}  			
+		}
+		
+		void rectangle()
+		{
+			int i,j;
+    		int r= 4;
+    		for (i = 0; i < r; i++)
+			{
+    			for (j = 0; j < r; j++) 
+      				obstacle[i][j] = '*';
+      			
+   				obstacle[i][j] = '\n';
+  			}
+		}
+		
+		void hollow_rectangle()
+		{
+			int i,j;
+			int m=3;
+			int n=3;
+			for (i = 0; i <= n; i++)
+    		{
+        		for (j = 0; j <= m; j++)
+        		{
+            		if (i == 0 || i == n ||j == 0 || j == m)        
+               			obstacle[i][j] = '*';        
+            		else
+                		obstacle[i][j] = ' ';
+        		}
+        		obstacle[i][j] = '\n';
+    		}
+		}	
+	
+		void genrate_pose()
+		{
+			pos.X = (rand()%(SCREEN_WIDTH-3)) ;
+	    	pos.Y = (rand()%(SCREEN_HEIGHT-3));
+	    
+			if(pos.X==0||pos.Y==0)
+	    	{
+	    		genrate_pose();
+			}
+		
+	   		for(int i=0;i<4;i++)
+	   			for(int j=0;j<4;j++) 
+					if(pos.X==objposX+j && pos.Y==objposY+i)
+	   				{
+	   					genrate_pose();
+	   				}
+		}
+		
+		void clearObstacle()
+		{
+			for(int i=0; i<4; i++) 				
+				for(int j=0; j<4; j++)
+	   	     		obstacle[i][j] = 0;
+		}
+	
+		void drawobstacle() 
+		{	
+	   		int k,l;
+	   		genrate_pose();
+	   
+			if(count_obstacle<TOTAL_OBSTACLE/3)
+       			{
+       	    		clearObstacle();
+    				trigle();	
+       				count_obstacle++;
+	   			}
+			else if(count_obstacle<10)
+	   			{
+	   				rectangle();
+	   	    		count_obstacle++;	
+	   			}
+			else
+	   			{
+	        		clearObstacle(); 
+	   	    		hollow_rectangle();
+	   			}
+	   
+			for(int i=0; i<4; i++) 				
+				for(int j=0; j<4; j++)
+				{
+					gotoxy(j+pos.X,i+pos.Y);
+					cout<<obstacle[i][j];
+				}
+		}
+	
+		COORD getpos()
+		{
+			return pos;
+		}
+	
+		void eraseobstacle() 
+		{
+			for(int i=0; i<4; i++) 
+			{				
+				for(int j=0; j<4; j++) 
+				{
+					gotoxy(j+pos.X,i+pos.Y);
+					cout<<" ";
+				}		
+			}
+		}
+};
+
+
+int obstacle::count_obstacle=0;
+
+/* 
+    Class name - play 
+    Description-this class is used for reset the game,checking the colidation between object and obstacle and play the game
+    static data_member-obstacle_cnt (integertype)
+	data_member-vector<COORD> obs_pos_coll(COORD type),vector<COORD>::iterator it;
+  	member function-reset(); used for reseting the game
+                  collide(); used for checking the colidation between obstacle and object
+                  play1(); used for playing the game for movement of object, checking win condition , boundry colide and obstacle
+                  colidation
+    parent class- my_object,obstacle
+*/
+
+class play :virtual protected my_object , obstacle
+{
+    static int obstacle_cnt;
+	vector<COORD>::iterator it;
+    vector<COORD> obs_pos_coll;
+     
+	public:
+	
+		void reset()
+		{
+			objposY = 4;
+			objposX = 4;
+			obstacle_cnt =0;
+			count_obstacle =0;
+			obs_pos_coll.clear();
+		}
+	
+		int collide(COORD position)
+		{	   
+	    	if((objposX == position.X) && (objposY == position.Y ))
+			{
+				return 1;
+			}
+				
+			for(int i=0,j=0;j<4,i<4;j++,i++) 				
+		    	if((j+objposX == position.X ) && (i+objposY == position.Y ))
+				{
+					return 1;
+				}		
+				
+			for(int i=0,j=0; i<4,j<4;j++, i++) 				
+		    	if((objposX == j+position.X) && (objposY == i+position.Y ))
+				{
+					return 1;
+				}
+		
+	   		for(int i=0,j=0;i<4,j<4;j++,i++)	
+				if((i+objposX == position.X) && (objposY == position.Y+j))
+				{
+					return 1;
+				}
+				
+			for(int i=0,j=0;i<4,j<4;j++,i++)	
+				if((objposX == i+position.X) && (objposY+j == position.Y))
+				{
+					return 1;
+				}
+				
+			#if 0
+		
+			for(int i=0;i<4;i++)
+				if((i+objposX == position.X ) && (objposY == position.Y ))
+		 	 		return 1;
+		
+	   		for(int i=0;i<4;i++)	 	 
+				if((objposX == position.X+i ) && (objposY == position.Y ))
+		 	 return 1;
+		 	 		
+			for(int i=0;i<4;i++)
+				if((objposX == position.X ) && (objposY+i == position.Y ))
+		 	 return 1;
+		 	 
+			for(int i=0;i<4;i++)
+		 	 	if((objposX == position.X ) && (objposY == position.Y +i))
+		 	 return 1;
+		 	 
+			#endif
+			 		 	 		 	    			
+			return 0;
+		}
+	
+		int play1()
+		{	
+			system("cls");
+			draw_border();	
+			reset();
+
+        	while(1)
+			{
+				if(kbhit())
+				{
+					char ch = getch();
+					switch(ch)
+					{
+						case 'w':
+								objposY-=1;
+								break;
+		    			case 's':
+								objposY+=1;
+								break;
+						case 'a':	  
+								objposX-=1;
+								break;
+						case 'd':
+								objposX+=1;
+								break;
+						case 'W':
+								objposY-=1;
+								break;
+		    			case 'S':
+								objposY+=1;
+								break;
+						case 'A':	  
+								objposX-=1;
+								break;
+						case 'D':
+								objposX+=1;
+								break;
+						case 'I':
+				   				rotateUp();
+				   				break; 
+						case 'J':
+				   				rotateLeft();
+				   				break;  	
+						case 'L':
+				   				rotateRight();
+				   				break;  	
+						case 'K':
+				   				rotateDown();
+				   				break;
+						case 'i':
+				   				rotateUp();
+				   				break; 
+						case 'j':
+				   				rotateLeft();
+				   				break;  	
+						case 'l':
+				   				rotateRight();
+				   				break;  	
+						case 'k':
+				   				rotateDown();
+				   				break; 
+						default:
+				    			MessageBox(NULL, "WRONG KEY !", "YOU ENTER A WRONG KEY !!", MB_ICONINFORMATION);
+	   	 						break;
+		       		}
+				}
+			
+				drawobj();
+				Sleep(500);
+	        	eraseobj();
+              
+            	if(obstacle_cnt<TOTAL_OBSTACLE)
+				{
+					drawobstacle();   	
+			    	obs_pos_coll.push_back(getpos());
+					obstacle_cnt++;
+	    		}	 
+		
+	   
+		    	for(int i=0;i<obstacle_cnt;i++)	
+		    	{
+	        		if((collide(obs_pos_coll.at(i)))==1)
+	        		{
+	    				MessageBox(NULL, "OBSTACLE COLIDE !", "OUT !", MB_ICONINFORMATION);
+	    				return 0;
+		    		}
+		    	}
+		    
+	    		if(boundry_colide()==1)
+	    		{
+	    			eraseobj();
+	    			MessageBox(NULL, "BOUNDRY COLIDE !", "OUT !!", MB_ICONINFORMATION);
+					return 0;
+				}
+		    
+				if(win()==1)
+				{
+					MessageBox(NULL, "WIN", "YOU WIN THE GAME !", MB_ICONINFORMATION);    
+					break;
+				}   
+		
+        	}
+        
+        	return 0;
+		} 
+};
+
+/*
+	function name- instruction
+	input pararmeter drawborder d
+	return type int
+	description - function is used to give instreuction of player
+*/
+int instruction(drawborder d)
+{   
+		system("cls");
+		char ch;
+		while(1)
+		{
+		
+		    d.gotoxy(15,5); cout<<" -------------------------- "; 
+			d.gotoxy(15,6); cout<<" |    INSTRUCTIONS     | "; 
+			d.gotoxy(15,7); cout<<" --------------------------";
+	 		d.gotoxy(15,8);cout<<" 	'a'or 'A' key for left,"<<endl;
+			d.gotoxy(15,9);cout<<"	'd'or'D' key for right,"<<endl;
+			d.gotoxy(15,10);cout<<"	'w'or'W' key for up,"<<endl;
+			d.gotoxy(15,11);cout<<"	's'or'S' key for down"<<endl;
+			d.gotoxy(15,12);cout<<"	'l'or'L' key for rotate Right"<<endl;
+			d.gotoxy(15,13);cout<<"	'j'or'J' key for rotate Left"<<endl;
+			d.gotoxy(15,14);cout<<"	'k'or'K' key for rotate Down"<<endl;
+			d.gotoxy(15,15);cout<<"	'i'or'I' key for rotate up"<<endl;
+			d.gotoxy(15,16);cout<<"  Other shapes (rectangle,trigles) are obstacle "<<endl;
+	 		d.gotoxy(15,17);cout<<"  '#' is a end Winning point "<<endl;
+	 		d.gotoxy(15,18);cout<<"  Press any key for return back to menu "<<endl;
+	 		ch=getch();
+	 		
+	 		if(ch)
+	 		{
+	 			break;
+			 }
+	 	}	
+	 	return 0;
+}
+
+int play::obstacle_cnt=0;
+
+
+int main() 
+{	
+	drawborder d; 
+	play p;
+	char ch;
+	int a=1;
+	d.setcursor(0,0);
+	srand( (unsigned)time(NULL));
+	
+	do {
+		
+		system("cls");
+		d.gotoxy(15,5); cout<<" -------------------------- "; 
+		d.gotoxy(15,6); cout<<" | OBJECT_OBSTACLES GAME  | "; 
+		d.gotoxy(15,7); cout<<" --------------------------";
+		d.gotoxy(15,9); cout<<" 1. Start Game";
+		d.gotoxy(15,10); cout<<"2. Press i or I for Instruction";
+    	d.gotoxy(15,11); cout<<"3. Press any key execpt i for start game";
+		ch=getch();
+		
+		if(ch!='i')
+	    	a=p.play1();
+	    else if(ch=='i'||ch=='I')
+	       a=instruction(d);
+	    
+	}while(1);
+	return 0;
+}
